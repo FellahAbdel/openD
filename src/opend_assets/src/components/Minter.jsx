@@ -7,7 +7,7 @@ function Minter() {
   const { register, handleSubmit } = useForm();
   const [nftPrincipal, setPrincipal] = useState("");
   const [loaderHidden, setLoaderHidden] = useState(true);
-
+  const [isDisabled, setDisable] = useState(false);
   async function onSubmit(data) {
     // console.log(data.name);
     setLoaderHidden(false);
@@ -18,6 +18,7 @@ function Minter() {
     const nftId = await opend.mint(imageByteData, name);
     // console.log(nftId.toText());
     setPrincipal(nftId);
+    setDisable(true);
     setLoaderHidden(true);
   }
 
@@ -60,7 +61,11 @@ function Minter() {
             </div>
           </div>
           <div className="form-ButtonBase-root form-Chip-root makeStyles-chipBlue-108 form-Chip-clickable">
-            <span onClick={handleSubmit(onSubmit)} className="form-Chip-label">
+            <span
+              onClick={handleSubmit(onSubmit)}
+              className="form-Chip-label"
+              disabled={isDisabled}
+            >
               Mint NFT
             </span>
           </div>

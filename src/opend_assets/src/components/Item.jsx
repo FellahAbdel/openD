@@ -5,7 +5,7 @@ import { idlFactory } from "../../../declarations/nft";
 import { Principal } from "@dfinity/principal";
 
 function Item(props) {
-  const id = Principal.fromText(props.id);
+  const id = props.id;
   const [name, setName] = useState();
   const [owner, setOwner] = useState();
   const [image, setImage] = useState();
