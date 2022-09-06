@@ -77,4 +77,13 @@ actor OpenD {
     public query func getOpendCanisterId() : async Principal {
         return Principal.fromActor(OpenD);
     };
+
+    // Check if the NFT is listed for sale
+    public query func isListed(id: Principal) : async Bool {
+        if(mapOfListings.get(id) == null){
+            return false;
+        }else {
+            return true;
+        }
+    }
 };

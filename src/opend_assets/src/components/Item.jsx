@@ -12,9 +12,10 @@ function Item(props) {
   const [owner, setOwner] = useState();
   const [image, setImage] = useState();
   const [textInput, setTextInput] = useState();
-  const [button, setButton] = useState(
-    <Button handleClick={handleSell} text="Sell" />
-  );
+  const [loaderHidden, setLoaderHidden] = useState(true);
+  const [blur, setBlur] = useState();
+  const [button, setButton] = useState();
+  const [sellStatus, setSellStatus] = useState("");
 
   const localHost = "http://localhost:8080/";
   let NFTActor;
@@ -38,7 +39,16 @@ function Item(props) {
     const blob = new Blob([imageData.buffer], { type: "image/png" });
     const image = URL.createObjectURL(blob);
     setImage(image);
+
+    const nftIsListed = await opend.isListed(props.id);
+    if (nftIsListed) {
+      setOwner("OpenD");
+      setBlur({ filter: "blur(4px)" });
+    } else {
+      setButton(<Button handleClick={handleSell} text={"Sell"} />);
+    }
   }
+
   let price;
   function handleSell() {
     setTextInput(
@@ -50,10 +60,12 @@ function Item(props) {
         onChange={(e) => (price = e.target.value)}
       />
     );
-    setButton(<Button handleClick={sellNFT} text="Confirm" />);
+    setButton(<Button handleClick={sellNFT} text={"Confirm"} />);
   }
 
   async function sellNFT() {
+    setLoaderHidden(false);
+    setBlur({ filter: "blur(4px)" });
     console.log(price);
     const listingResult = await opend.listItem(props.id, Number(price));
     console.log("listing: " + listingResult);
@@ -61,6 +73,13 @@ function Item(props) {
       const opendCanisterId = await opend.getOpendCanisterId();
       const transferResult = await NFTActor.transferOwnership(opendCanisterId);
       console.log(transferResult);
+      if (transferResult === "Success") {
+        setLoaderHidden(true);
+        setOwner("OpenD");
+        setTextInput();
+        setButton();
+        setSellStatus("Listed");
+      }
     }
   }
 
@@ -74,11 +93,18 @@ function Item(props) {
         <img
           className="disCardMedia-root makeStyles-image-19 disCardMedia-media disCardMedia-img"
           src={image}
+          style={blur}
         />
+        <div className="lds-ellipsis" hidden={loaderHidden}>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
         <div className="disCardContent-root">
           <h2 className="disTypography-root makeStyles-bodyText-24 disTypography-h5 disTypography-gutterBottom">
             {name}
-            <span className="purple-text"></span>
+            <span className="purple-text"> {sellStatus}</span>
           </h2>
           <p className="disTypography-root makeStyles-bodyText-24 disTypography-body2 disTypography-colorTextSecondary">
             Owner: {owner}
