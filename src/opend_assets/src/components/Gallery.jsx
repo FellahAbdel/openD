@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import Item from "./Item";
 import { Principal } from "@dfinity/principal";
+import Button from "./Button";
 
 function Gallery(props) {
   const [items, setItems] = useState();
 
   function fetchNFTs() {
-    console.log("Props ids", props.ids);
+    // console.log("Props ids", props.ids);
     if (props.ids !== undefined) {
       setItems(
         props.ids.map((NFTId) => {
-          console.log("NFTId", NFTId);
           return <Item id={NFTId} key={NFTId.toText()} />;
         })
       );
