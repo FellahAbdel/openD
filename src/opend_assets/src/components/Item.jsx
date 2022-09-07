@@ -5,6 +5,8 @@ import { idlFactory } from "../../../declarations/nft";
 import { Principal } from "@dfinity/principal";
 import Button from "./Button";
 import { opend } from "../../../declarations/opend/index";
+import CURRENT_USER_ID from "../index";
+import PriceLabel from "./PriceLabel";
 
 function Item(props) {
   const id = props.id;
@@ -16,6 +18,7 @@ function Item(props) {
   const [blur, setBlur] = useState();
   const [button, setButton] = useState();
   const [sellStatus, setSellStatus] = useState("");
+  const [priceLabel, setPriceLabel] = useState();
 
   const localHost = "http://localhost:8080/";
   let NFTActor;
@@ -40,12 +43,26 @@ function Item(props) {
     const image = URL.createObjectURL(blob);
     setImage(image);
 
-    const nftIsListed = await opend.isListed(props.id);
-    if (nftIsListed) {
-      setOwner("OpenD");
-      setBlur({ filter: "blur(4px)" });
-    } else {
-      setButton(<Button handleClick={handleSell} text={"Sell"} />);
+    // Only for the NFTs page
+    if (props.role == "collection") {
+      const nftIsListed = await opend.isListed(props.id);
+      if (nftIsListed) {
+        setOwner("OpenD");
+        setBlur({ filter: "blur(4px)" });
+      } else {
+        setButton(<Button handleClick={handleSell} text={"Sell"} />);
+      }
+    } else if (props.role == "discover") {
+      // For the discover page
+      // The buy button can not be showing for the seller
+      const originalOwner = await opend.getOriginalOwner(props.id);
+      if (originalOwner.toText() != CURRENT_USER_ID.toText()) {
+        setButton(<Button handleClick={handleBuy} text={"Buy"} />);
+      }
+
+      // We need to get price of the NFT from the backend
+      const price = await opend.getListedNFTPrice(props.id);
+      setPriceLabel(<PriceLabel sellPrice={price.toString()} />);
     }
   }
 
@@ -83,6 +100,10 @@ function Item(props) {
     }
   }
 
+  function handleBuy() {
+    console.log("Handle buy triggered!");
+  }
+
   useEffect(() => {
     loadNFT();
   }, []);
@@ -102,6 +123,7 @@ function Item(props) {
           <div></div>
         </div>
         <div className="disCardContent-root">
+          {priceLabel}
           <h2 className="disTypography-root makeStyles-bodyText-24 disTypography-h5 disTypography-gutterBottom">
             {name}
             <span className="purple-text"> {sellStatus}</span>

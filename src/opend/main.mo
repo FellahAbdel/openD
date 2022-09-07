@@ -1,10 +1,12 @@
 import Cycles "mo:base/ExperimentalCycles";
 import Debug "mo:base/Debug";
 import HashMap "mo:base/HashMap";
+// import Iter "mo:base/Blob";
+import List "mo:base/List";
 import NFTActorClass "../NFT/nft";
 import NFTs "mo:base/Trie";
 import Principal "mo:base/Principal";
-import List "mo:base/List";
+import Iter "mo:base/Iter";
 
 actor OpenD {
     private type Listing = {
@@ -50,6 +52,29 @@ actor OpenD {
         };
 
         return List.toArray(userNFTs);
+    };
+
+    public query func getListedNFTs() : async [Principal] {
+        let ids = Iter.toArray(mapOfListings.keys());
+        return ids;
+    }; 
+
+    public query func getOriginalOwner(id : Principal) : async Principal {
+        let listing : Listing = switch(mapOfListings.get(id)) {
+            case null return Principal.fromText("");
+            case (?result) result;
+        };
+
+        return listing.itemOwner;
+    };
+
+    public query func getListedNFTPrice(id: Principal) : async Nat {
+        let listing : Listing = switch(mapOfListings.get(id)){
+            case null return 0;
+            case (?result) result;
+        };
+
+        return listing.itemPrice;
     };
 
     public shared(msg) func listItem(id: Principal, price : Nat) : async Text {
