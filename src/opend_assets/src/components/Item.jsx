@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import logo from "../../assets/logo.png";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { idlFactory } from "../../../declarations/nft";
+import { idlFactory as tokenIdlFactory } from "../../../declarations/token";
 import { Principal } from "@dfinity/principal";
 import Button from "./Button";
 import { opend } from "../../../declarations/opend/index";
@@ -19,6 +20,7 @@ function Item(props) {
   const [button, setButton] = useState();
   const [sellStatus, setSellStatus] = useState("");
   const [priceLabel, setPriceLabel] = useState();
+  const [shouldDisplay, setShouldDisplay] = useState(true);
 
   const localHost = "http://localhost:8080/";
   let NFTActor;
@@ -100,8 +102,30 @@ function Item(props) {
     }
   }
 
-  function handleBuy() {
+  async function handleBuy() {
     console.log("Handle buy triggered!");
+    setLoaderHidden(false);
+    const tokenActor = Actor.createActor(tokenIdlFactory, {
+      agent,
+      canisterId: Principal.fromText("rdmx6-jaaaa-aaaaa-aaadq-cai"),
+    });
+
+    const sellerId = await opend.getOriginalOwner(props.id);
+    const itemPrice = await opend.getListedNFTPrice(props.id);
+
+    const result = await tokenActor.transfer(sellerId, itemPrice);
+    console.log(result);
+    if (result == "Success") {
+      const transferResult = await opend.completePurchase(
+        props.id,
+        sellerId,
+        CURRENT_USER_ID
+      );
+      setShouldDisplay(false);
+      setLoaderHidden(true);
+      setShouldDisplay(false);
+      console.log("purchase : " + transferResult);
+    }
   }
 
   useEffect(() => {
@@ -109,7 +133,10 @@ function Item(props) {
   }, []);
 
   return (
-    <div className="disGrid-item">
+    <div
+      style={{ display: shouldDisplay ? "inline" : "none" }}
+      className="disGrid-item"
+    >
       <div className="disPaper-root disCard-root makeStyles-root-17 disPaper-elevation1 disPaper-rounded">
         <img
           className="disCardMedia-root makeStyles-image-19 disCardMedia-media disCardMedia-img"
